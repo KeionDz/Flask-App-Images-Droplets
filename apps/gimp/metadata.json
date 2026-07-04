@@ -9,7 +9,7 @@
     "image",
     "editor"
   ],
-  "icon": "icon.png",
+  "icon": "icon.svg",
   "docker_image": "flaskapp-workspace/gimp:1.0",
   "build_path": "apps/gimp",
   "status": "stable",
