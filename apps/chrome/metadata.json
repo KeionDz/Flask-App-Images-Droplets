@@ -1,0 +1,35 @@
+{
+  "slug": "chrome",
+  "name": "Chrome Browser",
+  "description": "Google Chrome in an isolated, disposable workspace.",
+  "version": "1.0",
+  "category": "Browser",
+  "tags": [
+    "browser",
+    "web",
+    "chrome"
+  ],
+  "icon": "icon.png",
+  "docker_image": "flaskapp-workspace/chrome:1.0",
+  "build_path": "apps/chrome",
+  "status": "stable",
+  "features": {
+    "audio": true,
+    "clipboard": true,
+    "persistent": true,
+    "downloads": true,
+    "uploads": true
+  },
+  "defaults": {
+    "cpu_cores": 1,
+    "memory_mb": 2048,
+    "disk_mb": 4096,
+    "network_mode": "bridge",
+    "persistent_profile": false,
+    "startup_command": "google-chrome --no-sandbox --no-first-run --no-default-browser-check --hide-crash-restore-bubble",
+    "allow_clipboard": true,
+    "allow_upload": true,
+    "allow_download": true,
+    "allow_audio": true
+  }
+}

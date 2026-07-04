@@ -1,0 +1,35 @@
+{
+  "slug": "gimp",
+  "name": "GIMP",
+  "description": "GNU Image Manipulation Program for photo editing.",
+  "version": "1.0",
+  "category": "Graphics",
+  "tags": [
+    "graphics",
+    "image",
+    "editor"
+  ],
+  "icon": "icon.png",
+  "docker_image": "flaskapp-workspace/gimp:1.0",
+  "build_path": "apps/gimp",
+  "status": "stable",
+  "features": {
+    "audio": true,
+    "clipboard": true,
+    "persistent": true,
+    "downloads": true,
+    "uploads": true
+  },
+  "defaults": {
+    "cpu_cores": 2,
+    "memory_mb": 4096,
+    "disk_mb": 6144,
+    "network_mode": "bridge",
+    "persistent_profile": false,
+    "startup_command": "gimp",
+    "allow_clipboard": true,
+    "allow_upload": true,
+    "allow_download": true,
+    "allow_audio": true
+  }
+}

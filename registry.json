@@ -1,0 +1,251 @@
+{
+  "vendor": "Flask-App-Workspace",
+  "version": "1.0",
+  "count": 7,
+  "workspaces": [
+    {
+      "slug": "chrome",
+      "name": "Chrome Browser",
+      "description": "Google Chrome in an isolated, disposable workspace.",
+      "version": "1.0",
+      "category": "Browser",
+      "tags": [
+        "browser",
+        "web",
+        "chrome"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/chrome:1.0",
+      "build_path": "apps/chrome",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 1,
+        "memory_mb": 2048,
+        "disk_mb": 4096,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "google-chrome --no-sandbox --no-first-run --no-default-browser-check",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "file-manager",
+      "name": "File Manager",
+      "description": "Thunar file manager for browsing and managing workspace files.",
+      "version": "1.0",
+      "category": "Utilities",
+      "tags": [
+        "files",
+        "utility"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/file-manager:1.0",
+      "build_path": "apps/file-manager",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 1,
+        "memory_mb": 2048,
+        "disk_mb": 4096,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "thunar",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "firefox",
+      "name": "Firefox Browser",
+      "description": "Mozilla Firefox in an isolated, disposable workspace.",
+      "version": "1.0",
+      "category": "Browser",
+      "tags": [
+        "browser",
+        "web",
+        "firefox"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/firefox:1.0",
+      "build_path": "apps/firefox",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 1,
+        "memory_mb": 2048,
+        "disk_mb": 4096,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "firefox",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "gimp",
+      "name": "GIMP",
+      "description": "GNU Image Manipulation Program for photo editing.",
+      "version": "1.0",
+      "category": "Graphics",
+      "tags": [
+        "graphics",
+        "image",
+        "editor"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/gimp:1.0",
+      "build_path": "apps/gimp",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 2,
+        "memory_mb": 4096,
+        "disk_mb": 6144,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "gimp",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "libreoffice",
+      "name": "LibreOffice",
+      "description": "Full office suite \u2014 documents, spreadsheets, presentations.",
+      "version": "1.0",
+      "category": "Productivity",
+      "tags": [
+        "office",
+        "documents",
+        "productivity"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/libreoffice:1.0",
+      "build_path": "apps/libreoffice",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 2,
+        "memory_mb": 4096,
+        "disk_mb": 6144,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "libreoffice",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "terminal",
+      "name": "Terminal",
+      "description": "Minimal Linux shell (xfce4-terminal) in a browser tab.",
+      "version": "1.0",
+      "category": "Development",
+      "tags": [
+        "terminal",
+        "shell",
+        "cli"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/terminal:1.0",
+      "build_path": "apps/terminal",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 1,
+        "memory_mb": 1024,
+        "disk_mb": 2048,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "xfce4-terminal",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    },
+    {
+      "slug": "vscode",
+      "name": "VS Code",
+      "description": "Visual Studio Code IDE for development workloads.",
+      "version": "1.0",
+      "category": "Development",
+      "tags": [
+        "ide",
+        "editor",
+        "development"
+      ],
+      "icon": "icon.png",
+      "docker_image": "flaskapp-workspace/vscode:1.0",
+      "build_path": "apps/vscode",
+      "status": "stable",
+      "features": {
+        "audio": true,
+        "clipboard": true,
+        "persistent": true,
+        "downloads": true,
+        "uploads": true
+      },
+      "defaults": {
+        "cpu_cores": 2,
+        "memory_mb": 4096,
+        "disk_mb": 6144,
+        "network_mode": "bridge",
+        "persistent_profile": false,
+        "startup_command": "code --no-sandbox --unity-launch",
+        "allow_clipboard": true,
+        "allow_upload": true,
+        "allow_download": true,
+        "allow_audio": true
+      }
+    }
+  ]
+}

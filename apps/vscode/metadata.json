@@ -1,0 +1,35 @@
+{
+  "slug": "vscode",
+  "name": "VS Code",
+  "description": "Visual Studio Code IDE for development workloads.",
+  "version": "1.0",
+  "category": "Development",
+  "tags": [
+    "ide",
+    "editor",
+    "development"
+  ],
+  "icon": "icon.png",
+  "docker_image": "flaskapp-workspace/vscode:1.0",
+  "build_path": "apps/vscode",
+  "status": "stable",
+  "features": {
+    "audio": true,
+    "clipboard": true,
+    "persistent": true,
+    "downloads": true,
+    "uploads": true
+  },
+  "defaults": {
+    "cpu_cores": 2,
+    "memory_mb": 4096,
+    "disk_mb": 6144,
+    "network_mode": "bridge",
+    "persistent_profile": false,
+    "startup_command": "code --no-sandbox --unity-launch",
+    "allow_clipboard": true,
+    "allow_upload": true,
+    "allow_download": true,
+    "allow_audio": true
+  }
+}

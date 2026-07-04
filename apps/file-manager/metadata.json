@@ -1,0 +1,34 @@
+{
+  "slug": "file-manager",
+  "name": "File Manager",
+  "description": "Thunar file manager for browsing and managing workspace files.",
+  "version": "1.0",
+  "category": "Utilities",
+  "tags": [
+    "files",
+    "utility"
+  ],
+  "icon": "icon.png",
+  "docker_image": "flaskapp-workspace/file-manager:1.0",
+  "build_path": "apps/file-manager",
+  "status": "stable",
+  "features": {
+    "audio": true,
+    "clipboard": true,
+    "persistent": true,
+    "downloads": true,
+    "uploads": true
+  },
+  "defaults": {
+    "cpu_cores": 1,
+    "memory_mb": 2048,
+    "disk_mb": 4096,
+    "network_mode": "bridge",
+    "persistent_profile": false,
+    "startup_command": "thunar",
+    "allow_clipboard": true,
+    "allow_upload": true,
+    "allow_download": true,
+    "allow_audio": true
+  }
+}

@@ -1,0 +1,91 @@
+#!/bin/sh
+# ============================================================================
+# ~/.vnc/xstartup — APP-ONLY session launcher, run by KasmVNC's Xvnc.
+#
+# RemoteApp/Flowcase-style: the user interacts with ONE application, never a
+# Linux desktop. There is deliberately NO panel, NO desktop icons, NO menus,
+# NO terminal, NO settings — only:
+#   * xfwm4        — window manager, so the app behaves like a normal desktop
+#                    app (move / resize / minimize / maximize / restore)
+#   * xfsettingsd  — invisible chrome (cursor, theme, xsettings via xfconfd)
+#   * a flat, neutral backdrop (xsetroot) instead of any desktop environment
+#
+# The application is launched under lib/app-supervisor.sh: if its window is
+# closed it is relaunched (or, with APP_EXIT_BEHAVIOR=terminate, the whole
+# workspace ends). A restore watchdog guarantees the user is NEVER stranded
+# staring at an empty backdrop: if every window ends up minimized (there is no
+# taskbar to bring them back), the most recent one is re-activated.
+# Nothing is maximized or forced fullscreen.
+# ============================================================================
+set +e
+: "${STARTUPDIR:=/dockerstartup}"
+
+# Session D-Bus — xfsettingsd needs it.
+if command -v dbus-launch >/dev/null 2>&1 && [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+  eval "$(dbus-launch --sh-syntax --exit-with-session)"
+  export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
+fi
+
+xfsettingsd --daemon >/dev/null 2>&1 &
+
+# Flat neutral backdrop — hides the raw X root; there is no desktop to show.
+xsetroot -solid "#22262b" 2>/dev/null
+
+# Optional per-app hook: apps ship their own startup.sh as app-hook.sh; it may
+# set APP_CMD or do runtime prep. Sourced so it can export APP_CMD for us.
+if [ -f "$STARTUPDIR/app-hook.sh" ]; then
+  . "$STARTUPDIR/app-hook.sh"
+fi
+
+# --- Honor "no forced maximize": normalize the first app window once --------
+normalize_first_window() {
+  [ -z "$APP_CMD" ] && return 0
+  command -v wmctrl >/dev/null 2>&1 || return 0
+  i=0
+  while [ "$i" -lt 40 ]; do
+    wid=$(wmctrl -l 2>/dev/null | awk '$2==0 {print $1; exit}')
+    if [ -n "$wid" ]; then
+      wmctrl -i -r "$wid" -b remove,maximized_vert,maximized_horz,fullscreen 2>/dev/null
+      wmctrl -i -r "$wid" -e 0,80,50,1000,650 2>/dev/null
+      return 0
+    fi
+    i=$((i + 1)); sleep 1
+  done
+}
+
+# --- Restore watchdog: no taskbar exists, so if EVERY window is minimized ---
+# (hidden) the user would face an empty backdrop with no way back. Detect that
+# state and re-activate the most recent window. Minimizing one window while
+# another is visible is untouched — this only fires when nothing is visible.
+restore_watchdog() {
+  command -v wmctrl >/dev/null 2>&1 || return 0
+  command -v xprop  >/dev/null 2>&1 || return 0
+  while [ ! -f /tmp/.workspace_shutdown ]; do
+    sleep 2
+    ids=$(wmctrl -l 2>/dev/null | awk '$2==0 {print $1}')
+    [ -z "$ids" ] && continue
+    visible=0
+    last=""
+    for id in $ids; do
+      last="$id"
+      xprop -id "$id" _NET_WM_STATE 2>/dev/null | grep -q _NET_WM_STATE_HIDDEN || visible=1
+    done
+    if [ "$visible" -eq 0 ] && [ -n "$last" ]; then
+      wmctrl -i -a "$last" 2>/dev/null
+    fi
+  done
+}
+
+# Launch the application under the supervisor (keeps the workspace alive even
+# if the user closes the app). The WM stays in the foreground as session leader.
+if [ -n "$APP_CMD" ]; then
+  export APP_CMD
+  "$STARTUPDIR/lib/app-supervisor.sh" >/dev/null 2>&1 &
+  normalize_first_window &
+  restore_watchdog >/dev/null 2>&1 &
+fi
+
+# --compositor=off: KasmVNC's Xvnc composites already ("Another compositing
+# manager is running"); a second compositor wastes CPU and can leave early-
+# mapped windows with blank content.
+exec xfwm4 --compositor=off
