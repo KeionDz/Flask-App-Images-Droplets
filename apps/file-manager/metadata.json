@@ -8,7 +8,7 @@
     "files",
     "utility"
   ],
-  "icon": "icon.png",
+  "icon": "icon.svg",
   "docker_image": "flaskapp-workspace/file-manager:1.0",
   "build_path": "apps/file-manager",
   "status": "stable",
