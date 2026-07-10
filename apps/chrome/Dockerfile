@@ -11,6 +11,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget gnupg \
     && (apt-get install -y --no-install-recommends /tmp/chrome.deb || apt-get -y -f install) \
     && apt-get clean && rm -f /tmp/chrome.deb && rm -rf /var/lib/apt/lists/*
 
+# Reopen the previous session's tabs when the workspace is relaunched.
+#
+# Chrome's default startup is the New Tab Page, so ending a session and coming
+# back gave you an empty window even though the profile (cookies, history, logins)
+# had persisted. RestoreOnStartup=1 is "restore the last session". It goes in the
+# managed-policy dir rather than the profile's Preferences so it survives a wiped
+# profile and cannot be lost by an admin overriding the startup command.
+#
+# This only works because the workspace is shut down by CLOSING Chrome's window
+# (see base/startup.sh): Chrome writes its session on a clean quit, and has
+# nothing to restore after a SIGKILL.
+RUN install -d /etc/opt/chrome/policies/managed \
+    && printf '%s\n' '{ "RestoreOnStartup": 1 }' \
+       > /etc/opt/chrome/policies/managed/faw-workspace.json
+
 # App launch command consumed by the base xstartup + relaunch supervisor.
 ENV APP_CMD="google-chrome --no-sandbox --no-first-run --no-default-browser-check --hide-crash-restore-bubble"
 

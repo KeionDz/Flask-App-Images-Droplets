@@ -18,6 +18,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget gnupg \
 # force software WebRender — these containers have no GPU, and Firefox's
 # cached hardware-GPU decision in a persistent profile otherwise renders
 # blank page content on the next session. Also skip session-restore nags.
+#
+# NOTE: current Firefox does not read /usr/lib/firefox/defaults/pref/*.js — that
+# is why apps/firefox/startup.sh re-applies those same prefs into each profile's
+# user.js. Anything that must actually take effect goes in policies.json below.
+#
+# browser.startup.page = 3 reopens the tabs the user left open, so relaunching a
+# workspace comes back exactly where they were instead of on a blank window (the
+# Chrome image does the same via the RestoreOnStartup managed policy). It only
+# works because the graceful stop CLOSES the browser window: Firefox writes
+# sessionstore.jsonlz4 on a clean quit and has nothing to restore after a SIGKILL.
+# Status "default" so the user can still change it in Preferences.
+# resume_from_crash stays false — that governs the nag after an *unclean* exit.
 RUN install -d /usr/lib/firefox/defaults/pref /usr/lib/firefox/distribution \
     && printf '%s\n' \
       'pref("gfx.webrender.software", true);' \
@@ -31,7 +43,10 @@ RUN install -d /usr/lib/firefox/defaults/pref /usr/lib/firefox/distribution \
       '    "DisableAppUpdate": true,' \
       '    "OverrideFirstRunPage": "",' \
       '    "OverridePostUpdatePage": "",' \
-      '    "SkipTermsOfUse": true' \
+      '    "SkipTermsOfUse": true,' \
+      '    "Preferences": {' \
+      '      "browser.startup.page": { "Value": 3, "Status": "default" }' \
+      '    }' \
       '  }' \
       '}' \
       > /usr/lib/firefox/distribution/policies.json
