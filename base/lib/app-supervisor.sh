@@ -23,6 +23,8 @@ set -u
 : "${APP_CMD:?app-supervisor: APP_CMD must be set}"
 : "${APP_EXIT_BEHAVIOR:=relaunch}"
 SHUTDOWN_SENTINEL="/tmp/.workspace_shutdown"
+# The live application's PID, published for startup.sh's shutdown handler.
+APP_PID_FILE="${APP_PID_FILE:-/tmp/.workspace_app.pid}"
 
 # Wait for the window manager before the FIRST launch. On a persistent
 # profile the app starts fast enough to map its window before xfwm4 exists,
@@ -37,9 +39,17 @@ done
 backoff=1
 while [ ! -f "$SHUTDOWN_SENTINEL" ]; do
   echo "[app-supervisor] launching: $APP_CMD"
-  # eval so APP_CMD may carry flags (e.g. "google-chrome --no-sandbox").
-  eval "$APP_CMD"
+  # `exec` in a background subshell so $! is the application's own PID, not a
+  # wrapper shell's. startup.sh's shutdown handler signals exactly this PID:
+  # guessing it from APP_CMD's first word does not work for apps whose launcher
+  # execs a differently-named binary (google-chrome -> /opt/google/chrome/chrome),
+  # and a missed signal means the app is SIGKILLed with its profile unflushed.
+  eval "exec $APP_CMD" &
+  APP_PID=$!
+  echo "$APP_PID" > "$APP_PID_FILE"
+  wait "$APP_PID"
   code=$?
+  rm -f "$APP_PID_FILE"
   [ -f "$SHUTDOWN_SENTINEL" ] && break
 
   if [ "$APP_EXIT_BEHAVIOR" = "terminate" ]; then

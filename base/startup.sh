@@ -12,6 +12,9 @@ set -uo pipefail
 
 # ---- 1. Environment --------------------------------------------------------
 : "${DISPLAY:=:1}"
+# Exported so the shutdown handler's wmctrl can reach the X server to close the
+# application's windows (the only exit path Chrome flushes its cookie store on).
+export DISPLAY
 : "${VNC_PORT:=6901}"
 : "${AUDIO_PORT:=4901}"
 : "${VNC_RESOLUTION:=1280x720}"
@@ -89,20 +92,78 @@ FFMPEG_PID=$!
 echo "flaskapp-workspace up — VNC :${VNC_PORT}  AUDIO :${AUDIO_PORT}  APP: ${APP_CMD:-<none>}"
 
 # ---- 6. Clean shutdown -----------------------------------------------------
+# Ask the application to exit CLEANLY and wait for it before the X server goes
+# away. Critical for persistent profiles: browsers flush their SQLite databases
+# (cookies, history, prefs) only on a graceful exit, and losing the X connection
+# mid-write corrupts them.
+#
+# We signal the exact PID the app-supervisor recorded. Deriving a pkill pattern
+# from APP_CMD's first word silently missed any app whose launcher execs a
+# differently-named binary — `google-chrome` becomes /opt/google/chrome/chrome,
+# so `pkill -f google-chrome` only ever hit the crashpad helpers while the
+# browser itself was left to be SIGKILLed with an unflushed profile.
+# Budget: window-close wait + SIGTERM wait must stay under the orchestrator's
+# docker-stop timeout (WORKSPACE_STOP_TIMEOUT_S, 20s) or the container is killed
+# mid-flush anyway.
+APP_PID_FILE="${APP_PID_FILE:-/tmp/.workspace_app.pid}"
+APP_SHUTDOWN_TIMEOUT="${APP_SHUTDOWN_TIMEOUT:-10}"
+
+# True once the application process is gone.
+_app_gone() {
+  if [ -n "${_pid:-}" ]; then
+    kill -0 "$_pid" 2>/dev/null && return 1 || return 0
+  fi
+  pgrep -f "${APP_CMD%% *}" >/dev/null 2>&1 && return 1 || return 0
+}
+
+# Wait up to $1 seconds for the application to exit. 0 = gone, 1 = still running.
+_await_app_exit() {
+  _ticks=$(( $1 * 2 ))
+  while [ "$_ticks" -gt 0 ]; do
+    _app_gone && return 0
+    _ticks=$(( _ticks - 1 ))
+    sleep 0.5
+  done
+  return 1
+}
+
+stop_app() {
+  [ -n "${APP_CMD:-}" ] || return 0
+
+  _pid=""
+  [ -f "$APP_PID_FILE" ] && _pid="$(cat "$APP_PID_FILE" 2>/dev/null)"
+
+  # 1. Ask the application to CLOSE ITS WINDOWS. This is the only shutdown path
+  #    Chrome treats as a real quit: on SIGTERM it takes the SessionEnding()
+  #    fast path and exits WITHOUT committing its cookie store, so the user's
+  #    logins silently vanish from a persistent profile. Closing the last window
+  #    runs the normal quit, which flushes cookies, history and preferences.
+  if command -v wmctrl >/dev/null 2>&1; then
+    for _wid in $(wmctrl -l 2>/dev/null | awk '$2==0 {print $1}'); do
+      wmctrl -i -c "$_wid" 2>/dev/null || true
+    done
+    _await_app_exit "$APP_SHUTDOWN_TIMEOUT" && return 0
+  fi
+
+  # 2. No window manager, no windows, or the app ignored the close request.
+  if [ -n "$_pid" ] && kill -0 "$_pid" 2>/dev/null; then
+    kill -TERM "$_pid" 2>/dev/null || true
+  else
+    # Fallback for an app started outside the supervisor: match the basename of
+    # the launcher, which is the best guess available.
+    pkill -TERM -f "${APP_CMD%% *}" 2>/dev/null || true
+    _pid=""
+  fi
+  _await_app_exit 5 && return 0
+
+  echo "flaskapp-workspace: app did not exit cleanly — forcing"
+  [ -n "$_pid" ] && kill -KILL "$_pid" 2>/dev/null || true
+}
+
 shutdown() {
   echo "flaskapp-workspace: shutting down..."
   touch "$SHUTDOWN_SENTINEL" 2>/dev/null || true
-  # Ask the application to exit CLEANLY and wait briefly before the X server
-  # goes away. Critical for persistent profiles: browsers flush their SQLite
-  # databases on SIGTERM; losing the X connection mid-write corrupts them.
-  if [ -n "${APP_CMD:-}" ]; then
-    _app_bin="${APP_CMD%% *}"
-    pkill -TERM -f "$_app_bin" 2>/dev/null || true
-    for _ in 1 2 3 4 5 6; do
-      pgrep -f "$_app_bin" >/dev/null 2>&1 || break
-      sleep 0.5
-    done
-  fi
+  stop_app
   kill "$FFMPEG_PID" "$RELAY_PID" 2>/dev/null || true
   vncserver -kill "$DISPLAY" >/dev/null 2>&1 || true
   pulseaudio --kill >/dev/null 2>&1 || true
