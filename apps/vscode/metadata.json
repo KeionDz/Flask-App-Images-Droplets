@@ -25,7 +25,7 @@
     "memory_mb": 4096,
     "disk_mb": 6144,
     "network_mode": "bridge",
-    "persistent_profile": false,
+    "persistent_profile": true,
     "startup_command": "code --no-sandbox --unity-launch",
     "allow_clipboard": true,
     "allow_upload": true,

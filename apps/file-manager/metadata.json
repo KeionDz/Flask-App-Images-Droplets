@@ -24,7 +24,7 @@
     "memory_mb": 2048,
     "disk_mb": 4096,
     "network_mode": "bridge",
-    "persistent_profile": false,
+    "persistent_profile": true,
     "startup_command": "thunar",
     "allow_clipboard": true,
     "allow_upload": true,
