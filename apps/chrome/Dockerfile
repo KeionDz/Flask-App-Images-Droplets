@@ -22,8 +22,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget gnupg \
 # This only works because the workspace is shut down by CLOSING Chrome's window
 # (see base/startup.sh): Chrome writes its session on a clean quit, and has
 # nothing to restore after a SIGKILL.
+#
+# DownloadDirectory pins downloads to ~/Downloads, and PromptForDownloadLocation
+# stops the "where do you want to save this?" dialog from letting the user pick
+# somewhere else. The platform mirrors that one folder into object storage
+# (services/downloads_service.py), so its location has to be a contract the browser
+# cannot wander off — a file saved to the Desktop would silently never be mirrored.
+# Both are managed policy, so a user cannot override them in Settings.
+#
+# Spelled as an absolute path rather than Chrome's ${users_home} variable: HOME is
+# fixed by the base image, the Firefox policy pins the same literal path, and a
+# variable that silently failed to expand would send every download somewhere the
+# sync does not look.
 RUN install -d /etc/opt/chrome/policies/managed \
-    && printf '%s\n' '{ "RestoreOnStartup": 1 }' \
+    && printf '%s\n' \
+      '{' \
+      '  "RestoreOnStartup": 1,' \
+      '  "DownloadDirectory": "/home/flaskapp-user/Downloads",' \
+      '  "PromptForDownloadLocation": false' \
+      '}' \
        > /etc/opt/chrome/policies/managed/faw-workspace.json
 
 # App launch command consumed by the base xstartup + relaunch supervisor.

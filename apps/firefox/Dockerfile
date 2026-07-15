@@ -30,6 +30,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget gnupg \
 # sessionstore.jsonlz4 on a clean quit and has nothing to restore after a SIGKILL.
 # Status "default" so the user can still change it in Preferences.
 # resume_from_crash stays false — that governs the nag after an *unclean* exit.
+#
+# The browser.download.* prefs pin downloads to ~/Downloads and are "locked", not
+# "default": the platform mirrors exactly that folder into object storage
+# (services/downloads_service.py), so a user who redirected downloads to the Desktop
+# would find their files were silently never mirrored. folderList=2 means "use
+# browser.download.dir"; useDownloadDir=true skips the save-as prompt.
 RUN install -d /usr/lib/firefox/defaults/pref /usr/lib/firefox/distribution \
     && printf '%s\n' \
       'pref("gfx.webrender.software", true);' \
@@ -45,7 +51,10 @@ RUN install -d /usr/lib/firefox/defaults/pref /usr/lib/firefox/distribution \
       '    "OverridePostUpdatePage": "",' \
       '    "SkipTermsOfUse": true,' \
       '    "Preferences": {' \
-      '      "browser.startup.page": { "Value": 3, "Status": "default" }' \
+      '      "browser.startup.page": { "Value": 3, "Status": "default" },' \
+      '      "browser.download.folderList": { "Value": 2, "Status": "locked" },' \
+      '      "browser.download.dir": { "Value": "/home/flaskapp-user/Downloads", "Status": "locked" },' \
+      '      "browser.download.useDownloadDir": { "Value": true, "Status": "locked" }' \
       '    }' \
       '  }' \
       '}' \
